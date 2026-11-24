@@ -1,0 +1,38 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;750;800&display=swap');
+@import 'tailwindcss';
+
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--base);
+  transition: color .3s ease, background-color .3s ease;
+  color-scheme: dark;
+  --ink: #fff;
+  --green: #1d914c;
+  --blue: #1b75ba;
+  --base: #07110c;
+  --card: #0e1a14;
+  --input: #16241c;
+  --muted: #a7b1ab;
+  --border: rgb(255 255 255 / 10%);
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --ink: #132d1e;
+  --base: #f4f8f4;
+  --card: #fff;
+  --input: #eef5ef;
+  --muted: #4c6555;
+  --border: rgb(23 66 40 / 17%);
+}
+html { scroll-behavior: smooth; }
+body { min-width: 320px; margin: 0; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid #3998e2; outline-offset: 4px; }
+[id] { scroll-margin-top: 94px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+
