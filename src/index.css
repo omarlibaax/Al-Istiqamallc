@@ -5,19 +5,9 @@
   font-family: Inter, system-ui, sans-serif;
   color: var(--ink);
   background: var(--base);
-  transition: color .3s ease, background-color .3s ease;
-  color-scheme: dark;
-  --ink: #fff;
+  color-scheme: light;
   --green: #1d914c;
   --blue: #1b75ba;
-  --base: #07110c;
-  --card: #0e1a14;
-  --input: #16241c;
-  --muted: #a7b1ab;
-  --border: rgb(255 255 255 / 10%);
-}
-:root[data-theme='light'] {
-  color-scheme: light;
   --ink: #132d1e;
   --base: #f4f8f4;
   --card: #fff;

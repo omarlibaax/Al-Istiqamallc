@@ -1,6 +1,7 @@
+import { Link, useLocation } from 'react-router-dom'
 import { createContext, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Box, CalendarDays, Check, Compass, Mail, MapPin, Menu, MessageCircle, Minus, Moon, Plus, Sun, Package, Phone, Plane, ShieldCheck, Star, Ticket, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Box, CalendarDays, Check, Compass, Mail, MapPin, Menu, MessageCircle, Minus, Plus, Package, Phone, Plane, ShieldCheck, Star, Ticket, X } from 'lucide-react'
 import logo from './assets/logo.png'
 import d3Logo from './assets/partners/D3.png'
 import ekLogo from './assets/partners/EK.webp'
@@ -13,6 +14,11 @@ import qrLogo from './assets/partners/QR.png'
 import svLogo from './assets/partners/SV.png'
 import tkLogo from './assets/partners/TK.png'
 import somali from './somali'
+import daLogo from './assets/partners/DA.png'
+import etLogo from './assets/partners/ET.svg'
+import mqLogo from './assets/partners/MQ.png'
+import saLogo from './assets/partners/SA.png'
+import sxLogo from './assets/partners/SX.png'
 import './App.css'
 
 type Language = 'en' | 'so'
@@ -27,7 +33,6 @@ function useTranslation() {
   return (text: string) => translate(language, text)
 }
 
-const photo = import.meta.env.BASE_URL + 'haram.jpg'
 const contact = {
   email: import.meta.env.VITE_CONTACT_EMAIL as string | undefined,
   phone: import.meta.env.VITE_CONTACT_PHONE as string | undefined,
@@ -36,30 +41,24 @@ const contact = {
 const whatsappUrl = 'https://wa.me/252610755478'
 const links = ['Home', 'About', 'Services', 'Destinations', 'Packages', 'Contact']
 const services = [
-  { title: 'Flight Ticket Booking', tab: 'Flight Tickets', icon: Plane, text: 'Find competitive fares for domestic and international flights that fit your plans.', fields: [['From', 'city'], ['To', 'city'], ['Departure date', 'date'], ['Passengers', 'count']], action: 'Search' },
+  { title: 'Ticket Reservation', tab: 'Flight Tickets', icon: Plane, text: 'Find competitive fares for domestic and international flights that fit your plans.', fields: [['From', 'city'], ['To', 'city'], ['Departure date', 'date'], ['Passengers', 'count']], action: 'Search' },
   { title: 'Hajj & Umrah Packages', tab: 'Hajj & Umrah', icon: Box, text: 'All-inclusive pilgrimages with accommodation, transfers and guidance from experienced advisors.', fields: [['Travel dates', 'date'], ['Departure city', 'text', 'e.g. Nairobi'], ['Package', 'Economy', 'Standard', 'VIP'], ['Budget range', 'Under $1,500', '$1,500–$2,500', '$2,500+']], action: 'Search' },
   { title: 'Visa Application', tab: 'Visa', icon: Ticket, text: 'Get help preparing your documents and navigating the visa application process.', fields: [['Country', 'text', 'Destination country'], ['Visa type', 'Umrah', 'Tourist', 'Business', 'Transit'], ['Travel date', 'date']], action: 'Apply' },
   { title: 'Cargo Services', tab: 'Cargo', icon: Package, text: 'Send shipments locally or internationally with reliable, trackable delivery.', fields: [['Origin', 'text', 'Pickup city'], ['Destination', 'text', 'Delivery city'], ['Weight (kg)', 'number', 'e.g. 10']], action: 'Get quote' },
 ]
 
 const homeUrl = import.meta.env.BASE_URL
-const destinationsUrl = homeUrl + '?page=destinations'
-const bookingUrl = homeUrl + '?page=booking'
-const pageParams = new URLSearchParams(window.location.search)
-const isDestinationsPage = pageParams.get('page') === 'destinations'
-const isBookingPage = pageParams.get('page') === 'booking'
+const destinationsUrl = '/?page=destinations'
+const bookingUrl = '/?page=booking'
 const destinationGroups = [
   { type: 'Local', title: 'Local destinations', places: ['Kismaayo', 'Mogadishu', 'Hargeisa', 'Garowe', 'Baidoa', 'Dhusamreeb'] },
   { type: 'International', title: 'International destinations', places: ['Dubai', 'Malaysia', 'India', 'Turkey', 'Saudi Arabia', 'London'] },
 ] as const
 const serviceIds = ['flights', 'pilgrimage', 'visa', 'cargo']
-const requestedService = serviceIds.indexOf(pageParams.get('service') ?? '')
-const requestedDestination = pageParams.get('destination')
-const flightGroup = destinationGroups.find(group => group.places.some(place => place === requestedDestination))
 
-function navHref(link: string) {
-  if (link === 'Contact') return '#contact'
-  return link === 'Destinations' ? destinationsUrl : (isDestinationsPage || isBookingPage ? homeUrl : '') + '#' + link.toLowerCase()
+function navHref(link: string, search = '') {
+  if (link === 'Contact') return '/' + search + '#contact'
+  return link === 'Destinations' ? destinationsUrl : '/#' + link.toLowerCase()
 }
 
 const destinationScenes: Record<string, string> = {
@@ -83,46 +82,33 @@ function todayForInput() {
     .map(part => String(part).padStart(2, '0')).join('-')
 }
 
-function matchesSearch(query: string, ...values: string[]) {
-  return values.some(value => value.toLowerCase().includes(query.trim().toLowerCase()))
-}
-
 function Destinations() {
-  const [query, setQuery] = useState('')
   const t = useTranslation()
   const images = homeUrl + 'destinations/'
-  const groups = destinationGroups.map(group => ({
-    ...group,
-    places: group.places.filter(place => matchesSearch(query, place, t(place), destinationScenes[place], t(destinationScenes[place]))),
-  })).filter(group => group.places.length)
   return <div className="destinations">
     <header className="destination-hero">
       <img className="destination-hero-photo" src={images + 'hero.jpg'} alt={t('Waterfront and skyline of Dubai Marina')} fetchPriority="high" />
       <div className="shell destination-hero-content">
-        <a className="destinations-back" href={homeUrl}><ArrowLeft size={17} /> {t('Back to home')}</a>
+        <Link className="destinations-back" to="/"><ArrowLeft size={17} /> {t('Back to home')}</Link>
         <Tag>{t('Flight Tickets')}</Tag>
         <h1>{t('Explore our')} <em>{t('destinations')}</em></h1>
         <p>{t('Choose a local or international destination to start your flight inquiry.')}</p>
       </div>
     </header>
     <div className="shell destination-content">
-      <label className="directory-search">{t('Search destinations')}
-        <input type="search" value={query} onChange={event => setQuery(event.currentTarget.value)} placeholder={t('Search by city or country')} />
-      </label>
-      {!groups.length && <p role="status">{t('No destinations match your search.')}</p>}
-      {groups.map(({ type, title, places }) => <section className="destination-group" key={type}>
+      {destinationGroups.map(({ type, title, places }) => <section className="destination-group" key={type}>
         <h2>{t(title)}</h2>
         <ul className="destination-grid">
           {places.map(place => {
             const image = place.toLowerCase().replaceAll(' ', '-')
             return <li key={place}>
-              <a className="card destination-link" href={homeUrl + '?' + new URLSearchParams({ destination: place }) + '#journey'}>
+              <Link className="card destination-link" to={'/?' + new URLSearchParams({ destination: place }) + '#journey'}>
                 <div className="destination-photo"><img src={images + image + '.jpg'} alt="" loading="lazy" decoding="async" /></div>
                 <div className="destination-label">
                   <span><strong>{t(place)}</strong><small>{t(destinationScenes[place])}</small></span>
                   <ArrowUpRight size={20} aria-hidden="true" />
                 </div>
-              </a>
+              </Link>
             </li>
           })}
         </ul>
@@ -132,7 +118,9 @@ function Destinations() {
 }
 
 function ButtonLink({ children, href = bookingUrl, outline = false, showArrow = true }: { children: ReactNode; href?: string; outline?: boolean; showArrow?: boolean }) {
-  return <a className={'pill' + (outline ? ' outline' : '')} href={href} aria-current={isBookingPage && href === bookingUrl ? 'page' : undefined}>{children}{showArrow && <span aria-hidden="true"><ArrowUpRight size={16} /></span>}</a>
+  const { search } = useLocation()
+  const isBookingPage = new URLSearchParams(search).get('page') === 'booking'
+  return <Link className={'pill' + (outline ? ' outline' : '')} to={href} aria-current={isBookingPage && href === bookingUrl ? 'page' : undefined}>{children}{showArrow && <span aria-hidden="true"><ArrowUpRight size={16} /></span>}</Link>
 }
 
 function Tag({ children }: { children: ReactNode }) {
@@ -144,10 +132,10 @@ function Reveal({ children, id, className = '' }: { children: ReactNode; id?: st
   return <motion.section id={id} className={className} initial={reduced ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.1 }} transition={{ duration: reduced ? 0 : 0.65, ease: [0.22, 1, 0.36, 1] }}>{children}</motion.section>
 }
 
-type Theme = 'dark' | 'light'
-
-function Navbar({ theme, onThemeChange, language, onLanguageChange }: { theme: Theme; onThemeChange: () => void; language: Language; onLanguageChange: (value: Language) => void }) {
+function Navbar({ language, onLanguageChange }: { language: Language; onLanguageChange: (value: Language) => void }) {
   const t = useTranslation()
+  const { search } = useLocation()
+  const isDestinationsPage = new URLSearchParams(search).get('page') === 'destinations'
   const [scrolled, setScrolled] = useState(false)
   const menu = useRef<HTMLDialogElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -166,17 +154,17 @@ function Navbar({ theme, onThemeChange, language, onLanguageChange }: { theme: T
 
   return <header className={scrolled ? 'nav scrolled' : 'nav'}>
     <div className="shell nav-inner">
-      <a href={navHref('Home')} className="brand"><img src={logo} alt="Ali-Istiqama Travel Umrah & Hajj LLC" /></a>
-      <nav aria-label={t('Main navigation')}>{links.map(link => <a key={link} href={navHref(link)} aria-current={isDestinationsPage && link === 'Destinations' ? 'page' : undefined}>{t(link)}</a>)}</nav>
+      <Link to={navHref('Home')} className="brand"><img src={logo} alt="Ali-Istiqama Travel Umrah & Hajj LLC" /></Link>
+      <nav aria-label={t('Main navigation')}>{links.map(link => <Link key={link} to={navHref(link, search)} aria-current={isDestinationsPage && link === 'Destinations' ? 'page' : undefined}>{t(link)}</Link>)}</nav>
       <div className="nav-actions"><div className="language-switch" role="group" aria-label={language === 'so' ? 'Luqadda' : 'Language'}>
         <button type="button" lang="en" aria-label="English" aria-pressed={language === 'en'} onClick={() => onLanguageChange('en')}>EN</button>
         <span aria-hidden="true">|</span>
         <button type="button" lang="so" aria-label="Soomaali" aria-pressed={language === 'so'} onClick={() => onLanguageChange('so')}>SO</button>
-      </div><button type="button" className="round theme-toggle" aria-label={t('Light mode')} aria-pressed={theme === 'light'} onClick={onThemeChange}>{theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}</button><ButtonLink showArrow={false}>{t('Book now')}</ButtonLink><button className="round menu-toggle" aria-label={t('Open navigation')} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => { menu.current?.showModal(); setMenuOpen(true) }}><Menu size={22} /></button></div>
+      </div><ButtonLink showArrow={false}>{t('Book now')}</ButtonLink><button className="round menu-toggle" aria-label={t('Open navigation')} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => { menu.current?.showModal(); setMenuOpen(true) }}><Menu size={22} /></button></div>
     </div>
     <dialog id="mobile-navigation" ref={menu} className="drawer" onClose={() => setMenuOpen(false)} aria-label={t('Navigation menu')} onClick={event => { if (event.target === event.currentTarget) menu.current?.close() }}>
       <div className="drawer-content"><button className="round" aria-label={t('Close navigation')} onClick={() => menu.current?.close()}><X /></button>
-        {links.map(link => <a key={link} href={navHref(link)} aria-current={isDestinationsPage && link === 'Destinations' ? 'page' : undefined} onClick={() => menu.current?.close()}>{t(link)}</a>)}
+        {links.map(link => <Link key={link} to={navHref(link, search)} aria-current={isDestinationsPage && link === 'Destinations' ? 'page' : undefined} onClick={() => menu.current?.close()}>{t(link)}</Link>)}
       </div>
     </dialog>
   </header>
@@ -222,7 +210,7 @@ function Hero({ active, onSelect, children }: { active: number; onSelect: (index
       </div>
     </div>
     <div className="shell hero-search">{children}</div>
-    <div className="shell hero-notes"><a href="#services">{t('EXPLORE OUR SERVICES')} <ArrowDown size={14} /></a></div>
+    <div className="shell hero-notes"><Link to="/#services">{t('EXPLORE OUR SERVICES')} <ArrowDown size={14} /></Link></div>
   </section>
 }
 
@@ -265,8 +253,9 @@ function PassengerField() {
   </div>
 }
 
-function SearchCard({ active, setActive, onInquiry }: { active: number; setActive: (value: number) => void; onInquiry: (value: string) => void }) {
+function SearchCard({ active, setActive, onInquiry, destination }: { active: number; setActive: (value: number) => void; onInquiry: (value: string) => void; destination: string | null }) {
   const t = useTranslation()
+  const flightGroup = destinationGroups.find(group => group.places.some(place => place === destination))
   const service = services[active]
   const isFlight = service === services[0]
   const [error, setError] = useState('')
@@ -293,7 +282,7 @@ function SearchCard({ active, setActive, onInquiry }: { active: number; setActiv
   }
   const fields = service.fields.map(([label, kind, ...options], index) => {
   const Icon = [CalendarDays, MapPin, Ticket, Box][index]
-  if (isFlight && (label === 'From' || label === 'To')) return <CityField key={label} name={label} defaultValue={label === 'To' && flightGroup ? requestedDestination ?? '' : ''} />
+  if (isFlight && (label === 'From' || label === 'To')) return <CityField key={label} name={label} defaultValue={label === 'To' && flightGroup ? destination ?? '' : ''} />
   if (isFlight && label === 'Passengers') return <PassengerField key={label} />
   if (kind === 'date') return <DateField key={label} name={label} min={todayForInput()} />
   const isInput = ['text', 'number'].includes(kind)
@@ -350,7 +339,7 @@ function FlightBooking({ onInquiry }: { onInquiry: (value: string) => void }) {
 
   return <section className="booking-page" aria-labelledby="booking-title">
     <div className="shell booking-content">
-      <a className="destinations-back" href={homeUrl}><ArrowLeft size={17} aria-hidden="true" /> {t('Back to home')}</a>
+      <Link className="destinations-back" to="/"><ArrowLeft size={17} aria-hidden="true" /> {t('Back to home')}</Link>
       <Tag>{t('Flight Tickets')}</Tag>
       <h1 id="booking-title">{t('Flight Search')}</h1>
       <p>{t('Enter your trip details to request flight options from our travel team.')}</p>
@@ -391,12 +380,17 @@ const airlinePartners = [
   [fzLogo, 'flydubai'],
   [d3Logo, 'Daallo Airlines'],
   [msLogo, 'EgyptAir'],
+  [mqLogo, 'Maandeeq Air'],
+  [saLogo, 'Saacid Airlines'],
+  [sxLogo, 'Salaam Air Express'],
+  [daLogo, 'Dalsan Air'],
+  [etLogo, 'Ethiopian Airlines'],
 ] as const
 
 function AirlinePartners() {
   const t = useTranslation()
   return <section className="shell section airline-partners" aria-labelledby="airline-partners-title">
-    <h2 id="airline-partners-title">{t('Our')} <em>{t('airline partners')}</em></h2>
+    <h2 id="airline-partners-title">{t('Our')} <em>{t('Airline Partners')}</em></h2>
     <ul className="partner-grid">
       {airlinePartners.map(([logoUrl, name]) => <li key={name}>
         <img src={logoUrl} alt={name} width={128} height={128} loading="lazy" decoding="async" />
@@ -413,20 +407,13 @@ function About() {
   </Reveal>
 }
 
-function Services({ choose }: { choose: (index: number) => void }) {
+function Services() {
   const t = useTranslation()
-  const [query, setQuery] = useState('')
-  const results = services.map((service, index) => ({ ...service, index }))
-    .filter(({ title, text, tab }) => matchesSearch(query, title, t(title), text, t(text), tab, t(tab)))
   return <Reveal id="services" className="section shell">
     <div className="section-heading"><Tag>{t('What We Offer')}</Tag><h2>{t('Everything you need to')} <em>{t('travel with confidence')}</em></h2></div>
-    <label className="directory-search">{t('Search services')}
-      <input type="search" value={query} onChange={event => setQuery(event.currentTarget.value)} placeholder={t('Search by service name')} />
-    </label>
-    {!results.length && <p role="status">{t('No services match your search.')}</p>}
-    <div className="service-grid">{results.map(({ title, text, icon: Icon, index }) => <article key={title} className="card service">
+    <div className="service-grid">{services.map(({ title, text, icon: Icon }, index) => <article key={title} className="card service">
       <span className="tile-icon"><Icon aria-hidden="true" /></span><h3>{t(title)}</h3><p>{t(text)}</p>
-      <a href="#journey" onClick={() => choose(index)}>{t('Plan this service')} <ArrowUpRight size={16} aria-hidden="true" /></a>
+      <Link to={'/?service=' + serviceIds[index] + '#journey'}>{t('Plan this service')} <ArrowUpRight size={16} aria-hidden="true" /></Link>
     </article>)}</div>
   </Reveal>
 }
@@ -444,27 +431,50 @@ function InquirySteps() {
   </section>
 }
 
-const reviewPrompts = [
-  ['Planning your journey', 'How did the team help you prepare for Hajj or Umrah?'],
-  ['Arriving in the holy cities', 'How was your experience with accommodation and transfers?'],
-  ['Guidance during your pilgrimage', 'What stood out about the on-ground support?'],
+const testimonialExamples = [
+  { name: 'Amina Hassan', initials: 'AH', title: 'Flight booking customer', quote: 'I told the team my travel dates, and they helped me compare flight options and understand the baggage rules before I booked.' },
+  { name: 'Mohamed Ali', initials: 'MA', title: 'Visa applicant', quote: 'Al Istiqama explained which documents I needed and helped me check what was missing before I submitted my application.' },
+  { name: 'Fadumo Osman', initials: 'FO', title: 'Small business owner', quote: 'The team explained how to pack my shipment, what details to provide, and what to expect at each step.' },
+  { name: 'Abdirahman Yusuf', initials: 'AY', title: 'Umrah traveler', quote: 'The team walked me through the itinerary, accommodation, and transfers. I felt better prepared for my pilgrimage.' },
+  { name: 'Hodan Ahmed', initials: 'HA', title: 'Family traveler', quote: 'We were traveling with two children. The team helped us choose a flight with a connection that gave us enough time between gates.' },
+  { name: 'Ismail Nur', initials: 'IN', title: 'Business traveler', quote: 'My meeting date changed, and the team explained the fare difference and change fee before I moved my return flight.' },
 ]
-function Testimonials() {
+function CustomerFeedback() {
   const t = useTranslation()
-  const [active, setActive] = useState(0)
-  const move = (amount: number) => setActive((active + amount + reviewPrompts.length) % reviewPrompts.length)
-  return <Reveal className="section shell"><div className="section-heading"><Tag>{t('Pilgrim Experiences')}</Tag><h2>{t('Stories from our')} <em>{t('pilgrims')}</em></h2></div>
-    <div className="reviews">
-      <div className="card quote" aria-live="polite"><span className="quote-mark">“</span><h3>{t(reviewPrompts[active][0])}</h3><p>{t(reviewPrompts[active][1])}</p><small>{t('Verified pilgrim reviews coming soon')}</small></div>
-      <div className="review-image"><img src={photo} loading="lazy" alt={t('Pilgrims at Masjid al-Haram')} /></div>
+  const [paused, setPaused] = useState(false)
+
+  return <Reveal id="customer-feedback" className="section shell customer-feedback">
+    <div className="feedback-heading">
+      <div>
+        <h2>{t('Customer Feedback')}</h2>
+        <p>{t('Sample feedback')}</p>
+      </div>
+      <a className="pill outline" href={whatsappUrl + '?text=' + encodeURIComponent(t('I would like to share feedback about Ali-Istiqama Travel.'))} target="_blank" rel="noopener noreferrer">
+        {t('Share your feedback')} <span><MessageCircle size={16} aria-hidden="true" /></span>
+      </a>
     </div>
-    <div className="carousel-controls"><button className="round" onClick={() => move(-1)} aria-label={t('Previous testimonial topic')}><ArrowLeft size={19} /></button>{reviewPrompts.map(([title], index) => <button className="dot-control" key={title} aria-label={t(title)} aria-pressed={active === index} onClick={() => setActive(index)} />)}<button className="round" onClick={() => move(1)} aria-label={t('Next testimonial topic')}><ArrowRight size={19} /></button></div>
+    <button className="feedback-toggle" type="button" aria-controls="feedback-profiles" onClick={() => setPaused(current => !current)}>
+      {t(paused ? 'Resume scrolling' : 'Pause scrolling')}
+    </button>
+    <div id="feedback-profiles" className="feedback-viewport" data-paused={paused}>
+      <div className="feedback-track">
+        {[false, true].map(copy => <ul className={copy ? 'feedback-group feedback-copy' : 'feedback-group'} key={String(copy)} aria-hidden={copy || undefined} role="list">
+          {testimonialExamples.map(({ name, initials, title, quote }) => <li className="card feedback-card" key={name}>
+            <div className="feedback-profile">
+              <span className="feedback-avatar" aria-hidden="true">{initials}</span>
+              <div><h3>{name}</h3><p>{t(title)}</p></div>
+            </div>
+            <blockquote><p>{t(quote)}</p></blockquote>
+          </li>)}
+        </ul>)}
+      </div>
+    </div>
   </Reveal>
 }
 
 function PackageCard({ onInquiry }: { onInquiry: (value: string) => void }) {
   const t = useTranslation()
-  return <Reveal id="packages" className="section shell"><div className="section-heading"><Tag>{t('Featured Package')}</Tag><h2>{t('All-in')} <em>{t('Umrah')}</em> {t('package')}</h2></div>
+  return <Reveal id="packages" className="section shell"><div className="section-heading"><Tag>{t('Featured Package')}</Tag><h2> <em>{t('Umrah')}</em> {t('package')}</h2></div>
     <div className="card package-card"><div className="package-included"><h3>{t('Services Included')}</h3><ul>{['Round-trip flights', 'Hotel near the Haram', 'Umrah visa assistance', 'Airport and intercity transport', 'Guided ziyarat', '24/7 support'].map(item => <li key={item}><Check size={18} />{t(item)}</li>)}</ul></div>
       <div className="package-details"><div className="package-badges"><span className="stars" aria-label={t('Sample five-star rating')}>{Array.from({ length: 5 }, (_, index) => <Star key={index} size={16} fill="currentColor" />)}</span><span><ShieldCheck size={15} /> {t('7-Day Booking Assurance')}</span></div><p>{t('Example package price')}</p><strong>$1,999</strong><dl><div><dt>{t('Time Savings')}</dt><dd>{t('Travel arranged for you')}</dd></div><div><dt>{t('Expert Guidance')}</dt><dd>{t('On-ground support')}</dd></div><div><dt>{t('Reliable Solutions')}</dt><dd>{t('Coordinated stays and transfers')}</dd></div></dl><button className="pill" onClick={() => onInquiry(t('Featured All-in Umrah package'))}>{t('Get started')} <span><ArrowUpRight size={16} /></span></button></div>
     </div>
@@ -489,26 +499,26 @@ function Footer({ onContact }: { onContact: () => void }) {
     <div className="shell">
       <div className="footer-grid">
         <div className="footer-brand">
-          <a href={navHref('Home')} className="brand"><img src={logo} alt="Ali-Istiqama Travel Umrah & Hajj LLC" /></a>
+          <Link to={navHref('Home')} className="brand"><img src={logo} alt="Ali-Istiqama Travel Umrah & Hajj LLC" /></Link>
           <p>{t('Travel with confidence.')}</p>
           <address className="footer-contact">
             <span><MapPin size={17} aria-hidden="true" /> {t('Mogadishu, Somalia')}</span>
-            <a href={chatUrl}><MessageCircle size={17} aria-hidden="true" /> {contact.whatsapp}</a>
+            <a target="_blank" rel="noopener noreferrer" href={chatUrl}><MessageCircle size={17} aria-hidden="true" /> {contact.whatsapp}</a>
             <a href={'mailto:' + email}><Mail size={17} aria-hidden="true" /> {email}</a>
             {contact.phone && <a href={'tel:' + contact.phone}><Phone size={17} aria-hidden="true" /> {contact.phone}</a>}
           </address>
           <div className="footer-socials">
-            {socials.map(([title, href, icon]) => <a key={title} href={href} aria-label={title}>{icon}</a>)}
+            {socials.map(([title, href, icon]) => <a target="_blank" rel="noopener noreferrer" key={title} href={href} aria-label={title}>{icon}</a>)}
           </div>
         </div>
         <nav className="footer-column" aria-labelledby="footer-services">
           <h2 id="footer-services">{t('Services')}</h2>
-          <ul>{services.map(({ title }, index) => <li key={title}><a href={homeUrl + '?service=' + serviceIds[index] + '#journey'}>{t(title)}</a></li>)}</ul>
+          <ul>{services.map(({ title }, index) => <li key={title}><Link to={'/?service=' + serviceIds[index] + '#journey'}>{t(title)}</Link></li>)}</ul>
         </nav>
         <nav className="footer-column" aria-labelledby="footer-company">
           <h2 id="footer-company">{t('Company')}</h2>
           <ul>
-            {['About', 'Destinations', 'Packages'].map(label => <li key={label}><a href={navHref(label)}>{t(label)}</a></li>)}
+            {['About', 'Destinations', 'Packages'].map(label => <li key={label}><Link to={navHref(label)}>{t(label)}</Link></li>)}
             <li><button type="button" onClick={onContact}>{t('Contact us')}</button></li>
           </ul>
         </nav>
@@ -518,11 +528,29 @@ function Footer({ onContact }: { onContact: () => void }) {
         <p>{t('Powered by Alistiqama LLC')}</p>
       </div>
     </div>
-    <a className="floating-chat" href={chatUrl} aria-label={t('Chat on WhatsApp')}><MessageCircle aria-hidden="true" /></a>
+    <a target="_blank" rel="noopener noreferrer" className="floating-chat" href={chatUrl} aria-label={t('Chat on WhatsApp')}><MessageCircle aria-hidden="true" /></a>
   </footer>
 }
 
+function HomePage({ destination, service, onInquiry }: { destination: string | null; service: number; onInquiry: (value: string) => void }) {
+  const [active, setActive] = useState(destination ? 0 : Math.max(0, service))
+  return <>
+    <Hero active={active} onSelect={setActive}>
+      <SearchCard key={active} active={active} setActive={setActive} onInquiry={onInquiry} destination={destination} />
+    </Hero>
+    <About /><Services /><InquirySteps /><CustomerFeedback /><PackageCard onInquiry={onInquiry} />
+  </>
+}
+
 export default function App() {
+  const location = useLocation()
+  const params = new URLSearchParams(location.search)
+  const page = params.get('page')
+  const isDestinationsPage = page === 'destinations'
+  const isBookingPage = page === 'booking'
+  const requestedDestination = params.get('destination')
+  const destination = destinationGroups.some(group => group.places.some(place => place === requestedDestination)) ? requestedDestination : null
+  const requestedService = serviceIds.indexOf(params.get('service') ?? '')
   const [language, setLanguage] = useState<Language>(() => {
     try {
       return localStorage.getItem('alistiqama-language') === 'so' ? 'so' : 'en'
@@ -542,31 +570,20 @@ export default function App() {
     } catch {
       // The language still changes for the current page.
     }
-  }, [language])
-  const [theme, setTheme] = useState<Theme>(() => document.documentElement.dataset.theme === 'light' ? 'light' : 'dark')
-
-  function toggleTheme() {
-    const next = theme === 'dark' ? 'light' : 'dark'
-    document.documentElement.dataset.theme = next
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', next === 'light' ? '#f4f8f4' : '#07110c')
-    setTheme(next)
-    try {
-      localStorage.setItem('alistiqama-theme', next)
-    } catch {
-      // The preference still works for the current page when storage is unavailable.
-    }
-  }
-  const [active, setActive] = useState(flightGroup ? 0 : Math.max(0, requestedService))
+  }, [language, isDestinationsPage, isBookingPage])
   const [inquiry, setInquiry] = useState('')
   const [copyState, setCopyState] = useState('')
   const [contactError, setContactError] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null)
   const contactDialog = useRef<HTMLDialogElement>(null)
   useEffect(() => {
-    if (!isDestinationsPage && !isBookingPage && (flightGroup || requestedService >= 0) && window.location.hash === '#journey') {
-      document.getElementById('journey')?.scrollIntoView({ behavior: 'instant' })
-    }
-  }, [])
+    const frame = window.requestAnimationFrame(() => {
+      const id = location.hash.slice(1)
+      if (id) document.getElementById(id)?.scrollIntoView({ block: 'start' })
+      else window.scrollTo({ top: 0, behavior: 'instant' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [location.key, location.hash])
 
   function openInquiry(value: string) {
     setInquiry(value)
@@ -598,11 +615,10 @@ export default function App() {
   }
   return <LanguageContext.Provider value={language}>
     <a className="skip-link" href="#main-content">{t('Skip to content')}</a>
-    <Navbar theme={theme} onThemeChange={toggleTheme} language={language} onLanguageChange={setLanguage} />
-    <main id="main-content" tabIndex={-1}>{isBookingPage ? <FlightBooking onInquiry={openInquiry} /> : isDestinationsPage ? <Destinations /> : <>
-      <Hero active={active} onSelect={setActive}><SearchCard key={active} active={active} setActive={setActive} onInquiry={openInquiry} /></Hero>
-      <About /><Services choose={setActive} /><InquirySteps /><Testimonials /><PackageCard onInquiry={openInquiry} />
-    </>}
+    <Navbar language={language} onLanguageChange={setLanguage} />
+    <main id="main-content" tabIndex={-1}>
+      {isBookingPage ? <FlightBooking onInquiry={openInquiry} /> : isDestinationsPage ? <Destinations /> :
+        <HomePage key={location.search} destination={destination} service={requestedService} onInquiry={openInquiry} />}
       <AirlinePartners />
     </main>
     <Footer onContact={() => contactDialog.current?.showModal()} />
@@ -629,7 +645,7 @@ export default function App() {
         <button type="submit" className="pill">{t('Review inquiry')}</button>
       </form>
     </dialog>
-    <dialog ref={dialog} className="inquiry-dialog" aria-labelledby="inquiry-title"><div className="dialog-heading"><h2 id="inquiry-title">{t('Your travel inquiry')}</h2><button className="round" aria-label={t('Close inquiry')} onClick={() => dialog.current?.close()}><X size={20} /></button></div><p>{t('Review and copy your details, or send them to our travel team.')}</p><textarea aria-label={t('Inquiry details')} readOnly value={inquiry} rows={6} /><div className="inquiry-actions"><button className="pill" onClick={copyInquiry}>{t('Copy inquiry')}</button>{contact.email && <a className="pill outline" href={'mailto:' + contact.email + '?subject=' + encodeURIComponent(t('Travel inquiry')) + '&body=' + encodeURIComponent(inquiry)}>{t('Email inquiry')}</a>}{contact.whatsapp && <a className="pill outline" href={whatsappUrl + '?text=' + encodeURIComponent(inquiry)}>WhatsApp</a>}</div><p role="status">{t(copyState)}</p></dialog>
+    <dialog ref={dialog} className="inquiry-dialog" aria-labelledby="inquiry-title"><div className="dialog-heading"><h2 id="inquiry-title">{t('Your travel inquiry')}</h2><button className="round" aria-label={t('Close inquiry')} onClick={() => dialog.current?.close()}><X size={20} /></button></div><p>{t('Review and copy your details, or send them to our travel team.')}</p><textarea aria-label={t('Inquiry details')} readOnly value={inquiry} rows={6} /><div className="inquiry-actions"><button className="pill" onClick={copyInquiry}>{t('Copy inquiry')}</button>{contact.email && <a className="pill outline" href={'mailto:' + contact.email + '?subject=' + encodeURIComponent(t('Travel inquiry')) + '&body=' + encodeURIComponent(inquiry)}>{t('Email inquiry')}</a>}{contact.whatsapp && <a target="_blank" rel="noopener noreferrer" className="pill outline" href={whatsappUrl + '?text=' + encodeURIComponent(inquiry)}>WhatsApp</a>}</div><p role="status">{t(copyState)}</p></dialog>
   </LanguageContext.Provider>
 }
 
